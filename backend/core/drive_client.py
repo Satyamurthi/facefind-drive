@@ -3,11 +3,17 @@ Google Drive API client using a service account.
 
 Scope is strictly drive.readonly — the service account can only read files
 inside folders where the admin has explicitly shared access.
+
+Credentials are loaded from (in order of priority):
+  1. GOOGLE_APPLICATION_CREDENTIALS_JSON env var (full JSON string — for Railway/cloud)
+  2. google_service_account_file path setting (for local dev)
 """
 
 from __future__ import annotations
 
+import json
 import logging
+import os
 import time
 from typing import Iterator, Optional
 
@@ -37,9 +43,23 @@ IMAGE_FIELDS = "id,name,mimeType,modifiedTime,thumbnailLink,webViewLink,size"
 
 def _build_service():
     settings = get_settings()
-    creds = service_account.Credentials.from_service_account_file(
-        settings.google_service_account_file, scopes=SCOPES
-    )
+
+    # Prefer JSON string from env var (Railway / cloud deployments)
+    json_str = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip()
+    if json_str:
+        try:
+            info = json.loads(json_str)
+        except json.JSONDecodeError as exc:
+            raise RuntimeError(
+                "GOOGLE_APPLICATION_CREDENTIALS_JSON is not valid JSON: " + str(exc)
+            ) from exc
+        creds = service_account.Credentials.from_service_account_info(info, scopes=SCOPES)
+    else:
+        # Fall back to file path (local dev)
+        creds = service_account.Credentials.from_service_account_file(
+            settings.google_service_account_file, scopes=SCOPES
+        )
+
     return build("drive", "v3", credentials=creds, cache_discovery=False)
 
 
