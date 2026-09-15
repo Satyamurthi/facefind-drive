@@ -66,6 +66,7 @@ app.include_router(download.router)
 app.include_router(cache.router)
 
 
+@app.get("/health")
 @app.get("/api/health")
 async def health():
     return {"status": "ok", "version": "1.0.0", "app": settings.app_name}
