@@ -18,8 +18,13 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 60
     refresh_token_expire_days: int = 7
 
-    # Database
-    database_url: str = "sqlite+aiosqlite:///./facefind.db"
+    # Database (Supabase PostgreSQL)
+    database_url: str = "postgresql+asyncpg://user:password@host:6543/postgres"
+
+    # Supabase (optional — for Storage / Auth client)
+    supabase_url: str = ""
+    supabase_anon_key: str = ""
+    supabase_service_role_key: str = ""
 
     # Google Drive
     google_service_account_file: str = "./service_account/credentials.json"
